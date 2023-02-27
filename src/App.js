@@ -1,25 +1,61 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import SearchBar from './SearchBar';
+import UserList from './UserList';
+import RepoList from './RepoList';
+import axios from 'axios';
 import './App.css';
 
-function App() {
+
+const App = () => {
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [repos, setRepos] = useState([]);
+  const [sortBy, setSortBy] = useState('');
+
+  const handleUserSelect = async (user) => {
+    setSelectedUser(user);
+    try {
+      const response = await axios.get(user.repos_url);
+      setRepos(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleSortByStars = (repos) => {
+    if (sortBy === 'stars') {
+      setRepos([...repos.reverse()]);
+    } else {
+      setRepos([...repos.sort((a, b) => b.stargazers_count - a.stargazers_count)]);
+    }
+    setSortBy('stars');
+  };
+
+  const handleSortByForks = (repos) => {
+    if (sortBy === 'forks') {
+      setRepos([...repos.reverse()]);
+    } else {
+      setRepos([...repos.sort((a, b) => b.forks_count - a.forks_count)]);
+    }
+    setSortBy('forks');
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>GitHub User Search</h1>
+      <SearchBar onUserSelect={handleUserSelect} />
+      {selectedUser && (
+        <>
+          <UserList user={selectedUser} />
+          <RepoList
+            user={selectedUser}
+            repos={repos}
+            onSortByStars={handleSortByStars}
+            onSortByForks={handleSortByForks}
+          />
+        </>
+      )}
     </div>
   );
-}
+};
 
 export default App;
